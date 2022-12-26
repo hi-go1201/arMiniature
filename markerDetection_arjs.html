@@ -1,0 +1,416 @@
+<html>
+
+<head>
+    <title>AR.js(A-Frame) Marker Detection</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <!--script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script-->
+    <script src="https://unpkg.com/three@0.140.0/examples/js/libs/stats.min.js" crossorigin="anonymous"></script>
+    <script async type="text/javascript" src="https://docs.opencv.org/4.5.5/opencv.js"
+        onload="opencvIsReady()"></script>
+    <script>
+        //let lastDelta = 0;
+        //let lastPos;
+
+        let isCvLoaded = false;
+
+        function opencvIsReady() {
+            console.log('OpenCV.js is ready');
+            onloadCallback();
+        }
+
+        function onloadCallback() {
+            // OpenCV.jsのロード完了
+            isCvLoaded = true;
+        };
+
+        function processVideo() {
+            cv['onRuntimeInitialized'] = () => {
+                let src = cv.imread('canvasInput');
+                let dst = new cv.Mat();
+                cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
+                //cv.adaptiveThreshold(src, dst, 200, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 3, 2);
+                cv.imshow('canvasOutput', dst);
+                src.delete();
+                dst.delete();
+            }
+        }
+
+        AFRAME.registerComponent('nft', {
+            tick: function () {
+                const nft_marker = document.querySelector("#nft_marker");
+                const nft_pos = nft_marker.getAttribute('position');
+                console.log("nft_marker pos:", nft_pos.x, nft_pos.y, nft_pos.z);
+
+  
+            }
+        });
+
+        AFRAME.registerComponent('marker', {
+            //tick: function (delta) {
+            tick: function () {
+                //if (delta - lastDelta < 100) {
+                //    return;
+                //}
+
+                // AR.js Marker Training
+                // https://jeromeetienne.github.io/AR.js/three.js/examples/marker-training/examples/generator.html
+
+                // AR.js Barcode Marker Collection
+                // https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection
+                // HTML内の<a-scene embedded arjs='sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'>
+                // matrixCodeType: 3x3を適宜修正してbarcode選択
+
+                //const marker = this.el;
+                const marker1 = document.querySelector("#hiro");
+                const marker2 = document.querySelector("#barcode0");
+                const marker3 = document.querySelector("#barcode1");
+
+                // Position：画面中心座標から右と上で+方向、左と下で-方向
+                // Rotation：北向きで+90度、南向きで−90度、時計回りで+90度まで増加、反時計回りで-90度まで減少
+
+                //const pos = marker.getAttribute('position');
+                //console.log("marker pos:", pos.x, pos.y, pos.z);
+                const pos1 = marker1.getAttribute('position');
+                //console.log("marker1 pos:", pos1.x, pos1.y, pos1.z);
+
+                //const rot = marker.getAttribute('rotation');
+                //console.log("marker rot:", rot.x, rot.y, rot.z);
+                const rot1 = marker1.getAttribute('rotation');
+                //console.log("marker1 rot:", rot1.x, rot1.y, rot1.z);
+
+                const scale1 = marker1.getAttribute('scale');
+                //console.log("marker1 scale:", scale1.x, scale1.y, scale1.z);
+
+
+                const pos2 = marker2.getAttribute('position');
+                //console.log("marker2 pos:", pos2.x, pos2.y, pos2.z);
+                const rot2 = marker2.getAttribute('rotation');
+                //console.log("marker2 rot:", rot2.x, rot2.y, rot2.z);
+                const pos3 = marker3.getAttribute('position');
+                //console.log("marker3 pos:", pos3.x, pos3.y, pos3.z);
+                const rot3 = marker3.getAttribute('rotation');
+                //console.log("marker3 rot:", rot3.x, rot3.y, rot3.z);
+
+                //if (lastPos) {
+                //const diffPosX = pos.x - lastPos.x;
+                //const diffPosY = pos.y - lastPos.y;
+                //const diffPosZ = pos.z - lastPos.z;
+                //const diffPos = Math.sqrt(Math.pow(diffPosX * 10, 2) + Math.pow(diffPosY * 10, 2) + Math.pow(diffPosZ * 10, 2));
+
+                //if (diffPos > .1) {
+                //text.setAttribute('color', 'blue');
+                //text.setAttribute('value', 'MOVE');
+                //}
+                //}
+
+                //lastDelta = delta;
+                //lastPos = Object.assign({}, pos);
+/*
+                if (!isCvLoaded) {
+                    //setTimeout(processVideo, 100);
+                    return;
+                } else {
+                    //console.log("OK");
+                    //var canvas = document.getElementsByClassName("a-canvas")[0];
+                    //var canvas = document.querySelector("a-scene").components.screenshot.getCanvas("perspective");
+                    //console.log(canvas);
+                    //var context = canvas.getContext('2d');
+                    //var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    //tmp.id = "canvas";
+                    //console.log(imageData);
+                    var video = document.querySelector('video');
+                    //console.log(video);
+                    if (video) {
+                        var resizedCanvas = document.getElementById("canvasInput");
+                        var resizedContext = resizedCanvas.getContext("2d");
+                        var width = video.videoWidth;
+                        var height = video.videoHeight;
+                        //var aScene = document.querySelector("a-scene").components.screenshot.getCanvas("perspective");
+                        if (width && height) {
+                            //videoのサイズをキャンバスにセット
+                            resizedCanvas.width = width;
+                            resizedCanvas.height = height;
+                            //キャンバスにvideoをコピー
+                            resizedContext.drawImage(video, 0, 0, width, height);
+                            //videoソース読み込み
+                            //processVideo();
+                            /*
+                            let src = cv.imread('canvasInput');
+                            let dst = new cv.Mat();
+                            cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+                            // You can try more different parameters
+                            cv.adaptiveThreshold(src, dst, 200, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 3, 2);
+                            cv.imshow('canvasOutput', dst);
+                            src.delete();
+                            dst.delete();
+                            */
+
+                            /*
+                            // 手法1:findContoursで領域検出して座標取得
+                            let src = cv.imread('canvasInput');
+                            let gray = new cv.Mat();
+                            let dst = new cv.Mat();
+                            let mask = new cv.Mat();
+                            let dstC3 = new cv.Mat();
+                            let ksize = new cv.Size(3, 3);
+                            let anchor = new cv.Point(-1, -1);
+                            cv.blur(src, gray, ksize, anchor, cv.BORDER_DEFAULT);
+                            cv.cvtColor(gray, gray, cv.COLOR_RGBA2GRAY, 0);
+                            // You can try more different parameters
+                            cv.adaptiveThreshold(gray, dst, 200, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 3, 2);
+
+                            let contours = new cv.MatVector();
+                            let hierarchy = new cv.Mat();
+                            cv.findContours(dst, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+                            var contours_num = contours.size();
+                            //console.log(contours_num);
+                            mask = cv.Mat.ones(height, width, cv.CV_8UC3);
+                            dstC3 = cv.Mat.ones(height, width, cv.CV_8UC3);
+
+                            for (let i = 0; i < contours.size(); ++i) {
+                                //let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
+                                //Math.round(Math.random() * 255));
+
+                                var cnt = contours.get(i);
+                                var area = cv.contourArea(cnt, false);
+                                //console.log(area);
+                                let color = new cv.Scalar(255, 255, 255);
+                                if (area > 300 && area < 10000) {
+                                    console.log(area);
+                                    //cv.drawContours(mask, contours, i, color, 1, cv.LINE_8, hierarchy);
+                                    //cv.drawContours(mask, contours, i, color, cv.FILLED);
+                                    let rect = cv.boundingRect(cnt);
+                                    let rectangleColor = new cv.Scalar(255, 255, 255);
+                                    let point1 = new cv.Point(rect.x, rect.y);
+                                    let point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+                                    //ToDo:検出物体ごとの中心座標保存できるようにする
+                                    cv.rectangle(mask, point1, point2, rectangleColor, cv.FILLED);
+                                    //cv.rectangle(mask, point1, point2, rectangleColor, 2, cv.LINE_AA, 0);
+
+                                }
+                                cnt.delete();
+                            }
+
+                            contours.delete(); hierarchy.delete();
+
+                            for (var i = 0; i < src.rows; i++) {
+                                for (var j = 0; j < src.cols; j++) {
+                                    if (mask.ucharPtr(i, j)[0] == 255) {
+                                        dstC3.ucharPtr(i, j)[0] = src.ucharPtr(i, j)[0];
+                                        dstC3.ucharPtr(i, j)[1] = src.ucharPtr(i, j)[1];
+                                        dstC3.ucharPtr(i, j)[2] = src.ucharPtr(i, j)[2];
+                                    }
+                                    else {
+                                        dstC3.ucharPtr(i, j)[0] = 0;
+                                        dstC3.ucharPtr(i, j)[1] = 0;
+                                        dstC3.ucharPtr(i, j)[2] = 0;
+                                    }
+                                }
+                            }
+
+                            cv.imshow('canvasOutput', dstC3);
+                            src.delete();
+                            gray.delete();
+                            dst.delete();
+                            mask.delete();
+                            dstC3.delete();
+                            
+
+                            // 手法2:template matchingで座標取得
+                            let src = cv.imread('canvasInput');
+                            let templ = cv.imread('template1');
+                            let dst = new cv.Mat();
+                            let mask = new cv.Mat();
+                            cv.matchTemplate(src, templ, dst, cv.TM_CCORR_NORMED, mask);
+                            let result = cv.minMaxLoc(dst, mask);
+                            console.log("template1");
+                            console.log(result);
+                            //console.log(Object.keys(result));
+                            if (result.minVal > 0.87) {
+                                let maxPoint = result.maxLoc;
+                                let color = new cv.Scalar(255, 0, 0, 255);
+                                let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
+                                cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
+                            }
+
+                            templ = cv.imread('template2');
+                            dst = new cv.Mat();
+                            mask = new cv.Mat();
+                            cv.matchTemplate(src, templ, dst, cv.TM_CCORR_NORMED, mask);
+                            result = cv.minMaxLoc(dst, mask);
+                            console.log("template2");
+                            console.log(result);
+                            if (result.minVal > 0.785) {
+                                let maxPoint = result.maxLoc;
+                                let color = new cv.Scalar(0, 255, 0, 255);
+                                let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
+                                cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
+                            }
+
+                            templ = cv.imread('template3');
+                            dst = new cv.Mat();
+                            mask = new cv.Mat();
+                            cv.matchTemplate(src, templ, dst, cv.TM_CCORR_NORMED, mask);
+                            result = cv.minMaxLoc(dst, mask);
+                            console.log("template3");
+                            console.log(result);
+                            if (result.minVal > 0.84) {
+                                let maxPoint = result.maxLoc;
+                                let color = new cv.Scalar(0, 0, 255, 255);
+                                let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
+                                cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
+                            }
+
+                            cv.imshow('canvasOutput', src);
+                            src.delete(); dst.delete(); mask.delete();
+
+
+                        }
+                        //let src = cv.imread("canvas");
+                    }
+                }
+*/
+                
+                                // JSON形式でファイル格納、出力(?)
+                                var masterData = [];
+                
+                                var data1 = {
+                                    markerID: 'hiro',
+                                    markerPos: {
+                                        x: pos1.x,
+                                        y: pos1.y,
+                                        z: pos1.z
+                                    }
+                                    , markerRot: {
+                                        x: rot1.x,
+                                        y: rot1.y,
+                                        z: rot1.z
+                                    }
+                                };
+                
+                                var data2 = {
+                                    markerID: 'barcode0',
+                                    markerPos: {
+                                        x: pos2.x,
+                                        y: pos2.y,
+                                        z: pos2.z
+                                    }
+                                    , markerRot: {
+                                        x: rot2.x,
+                                        y: rot2.y,
+                                        z: rot2.z
+                                    }
+                                };
+                
+                                var data3 = {
+                                    markerID: 'barcode1',
+                                    markerPos: {
+                                        x: pos3.x,
+                                        y: pos3.y,
+                                        z: pos3.z
+                                    }
+                                    , markerRot: {
+                                        x: rot3.x,
+                                        y: rot3.y,
+                                        z: rot3.z
+                                    }
+                                };
+                
+                                masterData.push(data1);
+                                masterData.push(data2);
+                                masterData.push(data3);
+                
+                                let masterData2 = JSON.stringify({ MarkerInfo: masterData }, null, ' ');
+                                console.log(masterData2);
+                
+            }
+        });
+
+    </script>
+</head>
+
+<body>
+
+    <a-scene embedded arjs='trackingMethod: best; sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'>
+    <!--a-scene vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true;" embedded arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;"-->
+        <!-- handle unknown marker -->
+        <!-- <a-marker type='unknown'>
+        <a-box depth="1" height="1" width="1" position='0 0.5 0' material='opacity: 0.5; side:double; color:blue;'></a-box>
+    </a-marker> -->
+
+        <!-- handle hiro marker -->
+        <a-marker marker id="hiro" preset='hiro'>
+            <a-box position='0 0.5 0' material='opacity: 0.5; side: double;color:red;'>
+                <a-torus-knot radius='0.26' radius-tubular='0.05'
+                    animation="property: rotation; to:360 0 0; dur: 5000; easing: linear; loop: true">
+                </a-torus-knot>
+            </a-box>
+        </a-marker>
+
+        <a-marker type="pattern" url="data/pattern-bed.patt">
+            <a-box position="0 0.5 0" 
+                   material="color: blue; transparent: true; opacity: 0.50;">
+            </a-box>
+        </a-marker>
+
+        <!-- handle matrix marker -->
+        <a-marker id="barcode0" type='barcode' value='0'>
+            <a-box position='0 0.5 0' material='opacity: 0.5; side: double;color:pink;'>
+                <a-torus-knot radius='0.26' radius-tubular='0.05'
+                    animation="property: rotation; to:360 0 0; dur: 5000; easing: linear; loop: true">
+                </a-torus-knot>
+            </a-box>
+        </a-marker>
+
+        <a-marker id="barcode1" type='barcode' value='1'>
+            <a-box position='0 0.5 0' material='opacity: 0.5; side: double;color:pink;'>
+                <a-torus-knot radius='0.26' radius-tubular='0.05'
+                    animation="property: rotation; to:360 0 0; dur: 5000; easing: linear; loop: true">
+                </a-torus-knot>
+            </a-box>
+        </a-marker>
+
+        <!-- handle kanji marker -->
+        <a-marker id="kanji" preset='kanji'>
+            <a-box position='0 0.5 0' material='opacity: 0.5; side: double;color:green;'>
+                <a-torus-knot radius='0.26' radius-tubular='0.05'
+                    animation="property: rotation; to:360 0 0; dur: 5000; easing: linear; loop: true">
+                </a-torus-knot>
+            </a-box>
+        </a-marker>
+
+        <!-- handle nft marker -->
+        <!--a-nft nft id="nft_marker"
+            type="nft" 
+            url="https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/trex-image/trex" 
+            smooth="true" 
+            smoothCount="10" 
+            smoothTolerance=".01" 
+            smoothThreshold="5"
+        -->
+        <a-nft nft id="nft_marker"
+            type="nft" 
+            url="nft_bed/bed" 
+            smooth="true" 
+            smoothCount="10" 
+            smoothTolerance=".01" 
+            smoothThreshold="5"
+        >
+        <a-box></a-box>
+        </a-nft>
+
+            <!-- add a simple camera -->
+            <a-entity camera></a-entity>
+    </a-scene>
+    <canvas id="canvasInput" style="display: none;"></canvas>
+    <canvas id="canvasOutput"></canvas>
+    <img id="template1" src="data/bed.png"></img>
+    <img id="template2" src="data/chair.png"></img>
+    <img id="template3" src="data/table1.png"></img>
+</body>
+
+</html>
