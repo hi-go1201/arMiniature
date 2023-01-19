@@ -37,3 +37,8 @@ host = '0.0.0.0'
 port = 3333
 httpd = s.HTTPServer((host, port), MyHandler)
 httpd.serve_forever()
+
+"""
+下記コマンドラインからもレスポンス確認可能
+curl -XPOST 'http://localhost:3333/' -d '{ "question": "今日の天気は" }'
+"""
