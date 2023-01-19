@@ -342,6 +342,8 @@
                 // JSON形式でファイル格納、出力(?)
                 var masterData = [];
 
+                let roomID = "testRoom1";
+
                 var data1 = {
                     markerID: 'hiro',
                     markerPos: {
@@ -388,7 +390,7 @@
                 masterData.push(data2);
                 masterData.push(data3);
 
-                let masterData2 = JSON.stringify({ MarkerInfo: masterData }, null, ' ');
+                let masterData2 = JSON.stringify({ room_id: roomID, items: masterData }, null, ' ');
                 console.log(masterData2);
 
                 sendJSONData = masterData2;
