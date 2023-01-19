@@ -16,6 +16,7 @@
         //let lastPos;
 
         let isCvLoaded = false;
+        let sendJSONData;
 
         function opencvIsReady() {
             console.log('OpenCV.js is ready');
@@ -39,13 +40,59 @@
             }
         }
 
+        /*-----------------------------
+            JSONデータを送信する
+            引数：なし
+            戻値：なし
+        --------------------------------*/
+        function sendJsonData() {
+            /*
+            //送信テスト用連想配列
+            var json_asocc =
+                [
+                    {
+                        'maker': 'MAZDA',
+                        'model': 'DEMIO',
+                        'grade': 'XD L pakage'
+                    },
+                    {
+                        'maker': 'Peugeot',
+                        'model': '206',
+                        'grade': 'XT'
+                    },
+                    {
+                        'maker': 'Rover',
+                        'model': 'MINI',
+                        'grade': 'Cooper 35th Anniversary'
+                    }
+                ];
+
+            //テスト用連想配列をJSONにエンコード
+            var json_text = JSON.stringify(json_asocc);
+            */
+            var json_text = sendJSONData;
+
+            //データを送信
+            xhr = new XMLHttpRequest;       //インスタンス作成
+            xhr.onload = function () {        //レスポンスを受け取った時の処理（非同期）
+                var res = xhr.responseText;
+                if (res.length > 0) alert(res);
+            };
+            xhr.onerror = function () {       //エラーが起きた時の処理（非同期）
+                alert("error!");
+            }
+            xhr.open('post', "http://localhost:3333/", true);    //(1)
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(json_text);    //送信実行
+        }
+
         AFRAME.registerComponent('nft', {
             tick: function () {
                 const nft_marker = document.querySelector("#nft_marker");
                 const nft_pos = nft_marker.getAttribute('position');
                 console.log("nft_marker pos:", nft_pos.x, nft_pos.y, nft_pos.z);
 
-  
+
             }
         });
 
@@ -126,224 +173,226 @@
 
                 //lastDelta = delta;
                 //lastPos = Object.assign({}, pos);
-/*
-                if (!isCvLoaded) {
-                    //setTimeout(processVideo, 100);
-                    return;
-                } else {
-                    //console.log("OK");
-                    //var canvas = document.getElementsByClassName("a-canvas")[0];
-                    //var canvas = document.querySelector("a-scene").components.screenshot.getCanvas("perspective");
-                    //console.log(canvas);
-                    //var context = canvas.getContext('2d');
-                    //var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                    //tmp.id = "canvas";
-                    //console.log(imageData);
-                    var video = document.querySelector('video');
-                    //console.log(video);
-                    if (video) {
-                        var resizedCanvas = document.getElementById("canvasInput");
-                        var resizedContext = resizedCanvas.getContext("2d");
-                        var width = video.videoWidth;
-                        var height = video.videoHeight;
-                        //var aScene = document.querySelector("a-scene").components.screenshot.getCanvas("perspective");
-                        if (width && height) {
-                            //videoのサイズをキャンバスにセット
-                            resizedCanvas.width = width;
-                            resizedCanvas.height = height;
-                            //キャンバスにvideoをコピー
-                            resizedContext.drawImage(video, 0, 0, width, height);
-                            //videoソース読み込み
-                            //processVideo();
-                            /*
-                            let src = cv.imread('canvasInput');
-                            let dst = new cv.Mat();
-                            cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-                            // You can try more different parameters
-                            cv.adaptiveThreshold(src, dst, 200, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 3, 2);
-                            cv.imshow('canvasOutput', dst);
-                            src.delete();
-                            dst.delete();
-                            */
+                /*
+                                if (!isCvLoaded) {
+                                    //setTimeout(processVideo, 100);
+                                    return;
+                                } else {
+                                    //console.log("OK");
+                                    //var canvas = document.getElementsByClassName("a-canvas")[0];
+                                    //var canvas = document.querySelector("a-scene").components.screenshot.getCanvas("perspective");
+                                    //console.log(canvas);
+                                    //var context = canvas.getContext('2d');
+                                    //var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                                    //tmp.id = "canvas";
+                                    //console.log(imageData);
+                                    var video = document.querySelector('video');
+                                    //console.log(video);
+                                    if (video) {
+                                        var resizedCanvas = document.getElementById("canvasInput");
+                                        var resizedContext = resizedCanvas.getContext("2d");
+                                        var width = video.videoWidth;
+                                        var height = video.videoHeight;
+                                        //var aScene = document.querySelector("a-scene").components.screenshot.getCanvas("perspective");
+                                        if (width && height) {
+                                            //videoのサイズをキャンバスにセット
+                                            resizedCanvas.width = width;
+                                            resizedCanvas.height = height;
+                                            //キャンバスにvideoをコピー
+                                            resizedContext.drawImage(video, 0, 0, width, height);
+                                            //videoソース読み込み
+                                            //processVideo();
+                                            /*
+                                            let src = cv.imread('canvasInput');
+                                            let dst = new cv.Mat();
+                                            cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+                                            // You can try more different parameters
+                                            cv.adaptiveThreshold(src, dst, 200, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 3, 2);
+                                            cv.imshow('canvasOutput', dst);
+                                            src.delete();
+                                            dst.delete();
+                                            */
 
-                            /*
-                            // 手法1:findContoursで領域検出して座標取得
-                            let src = cv.imread('canvasInput');
-                            let gray = new cv.Mat();
-                            let dst = new cv.Mat();
-                            let mask = new cv.Mat();
-                            let dstC3 = new cv.Mat();
-                            let ksize = new cv.Size(3, 3);
-                            let anchor = new cv.Point(-1, -1);
-                            cv.blur(src, gray, ksize, anchor, cv.BORDER_DEFAULT);
-                            cv.cvtColor(gray, gray, cv.COLOR_RGBA2GRAY, 0);
-                            // You can try more different parameters
-                            cv.adaptiveThreshold(gray, dst, 200, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 3, 2);
+                /*
+                // 手法1:findContoursで領域検出して座標取得
+                let src = cv.imread('canvasInput');
+                let gray = new cv.Mat();
+                let dst = new cv.Mat();
+                let mask = new cv.Mat();
+                let dstC3 = new cv.Mat();
+                let ksize = new cv.Size(3, 3);
+                let anchor = new cv.Point(-1, -1);
+                cv.blur(src, gray, ksize, anchor, cv.BORDER_DEFAULT);
+                cv.cvtColor(gray, gray, cv.COLOR_RGBA2GRAY, 0);
+                // You can try more different parameters
+                cv.adaptiveThreshold(gray, dst, 200, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 3, 2);
 
-                            let contours = new cv.MatVector();
-                            let hierarchy = new cv.Mat();
-                            cv.findContours(dst, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
-                            var contours_num = contours.size();
-                            //console.log(contours_num);
-                            mask = cv.Mat.ones(height, width, cv.CV_8UC3);
-                            dstC3 = cv.Mat.ones(height, width, cv.CV_8UC3);
+                let contours = new cv.MatVector();
+                let hierarchy = new cv.Mat();
+                cv.findContours(dst, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+                var contours_num = contours.size();
+                //console.log(contours_num);
+                mask = cv.Mat.ones(height, width, cv.CV_8UC3);
+                dstC3 = cv.Mat.ones(height, width, cv.CV_8UC3);
 
-                            for (let i = 0; i < contours.size(); ++i) {
-                                //let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
-                                //Math.round(Math.random() * 255));
+                for (let i = 0; i < contours.size(); ++i) {
+                    //let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
+                    //Math.round(Math.random() * 255));
 
-                                var cnt = contours.get(i);
-                                var area = cv.contourArea(cnt, false);
-                                //console.log(area);
-                                let color = new cv.Scalar(255, 255, 255);
-                                if (area > 300 && area < 10000) {
-                                    console.log(area);
-                                    //cv.drawContours(mask, contours, i, color, 1, cv.LINE_8, hierarchy);
-                                    //cv.drawContours(mask, contours, i, color, cv.FILLED);
-                                    let rect = cv.boundingRect(cnt);
-                                    let rectangleColor = new cv.Scalar(255, 255, 255);
-                                    let point1 = new cv.Point(rect.x, rect.y);
-                                    let point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
-                                    //ToDo:検出物体ごとの中心座標保存できるようにする
-                                    cv.rectangle(mask, point1, point2, rectangleColor, cv.FILLED);
-                                    //cv.rectangle(mask, point1, point2, rectangleColor, 2, cv.LINE_AA, 0);
+                    var cnt = contours.get(i);
+                    var area = cv.contourArea(cnt, false);
+                    //console.log(area);
+                    let color = new cv.Scalar(255, 255, 255);
+                    if (area > 300 && area < 10000) {
+                        console.log(area);
+                        //cv.drawContours(mask, contours, i, color, 1, cv.LINE_8, hierarchy);
+                        //cv.drawContours(mask, contours, i, color, cv.FILLED);
+                        let rect = cv.boundingRect(cnt);
+                        let rectangleColor = new cv.Scalar(255, 255, 255);
+                        let point1 = new cv.Point(rect.x, rect.y);
+                        let point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+                        //ToDo:検出物体ごとの中心座標保存できるようにする
+                        cv.rectangle(mask, point1, point2, rectangleColor, cv.FILLED);
+                        //cv.rectangle(mask, point1, point2, rectangleColor, 2, cv.LINE_AA, 0);
 
-                                }
-                                cnt.delete();
-                            }
+                    }
+                    cnt.delete();
+                }
 
-                            contours.delete(); hierarchy.delete();
+                contours.delete(); hierarchy.delete();
 
-                            for (var i = 0; i < src.rows; i++) {
-                                for (var j = 0; j < src.cols; j++) {
-                                    if (mask.ucharPtr(i, j)[0] == 255) {
-                                        dstC3.ucharPtr(i, j)[0] = src.ucharPtr(i, j)[0];
-                                        dstC3.ucharPtr(i, j)[1] = src.ucharPtr(i, j)[1];
-                                        dstC3.ucharPtr(i, j)[2] = src.ucharPtr(i, j)[2];
-                                    }
-                                    else {
-                                        dstC3.ucharPtr(i, j)[0] = 0;
-                                        dstC3.ucharPtr(i, j)[1] = 0;
-                                        dstC3.ucharPtr(i, j)[2] = 0;
-                                    }
-                                }
-                            }
-
-                            cv.imshow('canvasOutput', dstC3);
-                            src.delete();
-                            gray.delete();
-                            dst.delete();
-                            mask.delete();
-                            dstC3.delete();
-                            
-
-                            // 手法2:template matchingで座標取得
-                            let src = cv.imread('canvasInput');
-                            let templ = cv.imread('template1');
-                            let dst = new cv.Mat();
-                            let mask = new cv.Mat();
-                            cv.matchTemplate(src, templ, dst, cv.TM_CCORR_NORMED, mask);
-                            let result = cv.minMaxLoc(dst, mask);
-                            console.log("template1");
-                            console.log(result);
-                            //console.log(Object.keys(result));
-                            if (result.minVal > 0.87) {
-                                let maxPoint = result.maxLoc;
-                                let color = new cv.Scalar(255, 0, 0, 255);
-                                let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
-                                cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
-                            }
-
-                            templ = cv.imread('template2');
-                            dst = new cv.Mat();
-                            mask = new cv.Mat();
-                            cv.matchTemplate(src, templ, dst, cv.TM_CCORR_NORMED, mask);
-                            result = cv.minMaxLoc(dst, mask);
-                            console.log("template2");
-                            console.log(result);
-                            if (result.minVal > 0.785) {
-                                let maxPoint = result.maxLoc;
-                                let color = new cv.Scalar(0, 255, 0, 255);
-                                let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
-                                cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
-                            }
-
-                            templ = cv.imread('template3');
-                            dst = new cv.Mat();
-                            mask = new cv.Mat();
-                            cv.matchTemplate(src, templ, dst, cv.TM_CCORR_NORMED, mask);
-                            result = cv.minMaxLoc(dst, mask);
-                            console.log("template3");
-                            console.log(result);
-                            if (result.minVal > 0.84) {
-                                let maxPoint = result.maxLoc;
-                                let color = new cv.Scalar(0, 0, 255, 255);
-                                let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
-                                cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
-                            }
-
-                            cv.imshow('canvasOutput', src);
-                            src.delete(); dst.delete(); mask.delete();
-
-
+                for (var i = 0; i < src.rows; i++) {
+                    for (var j = 0; j < src.cols; j++) {
+                        if (mask.ucharPtr(i, j)[0] == 255) {
+                            dstC3.ucharPtr(i, j)[0] = src.ucharPtr(i, j)[0];
+                            dstC3.ucharPtr(i, j)[1] = src.ucharPtr(i, j)[1];
+                            dstC3.ucharPtr(i, j)[2] = src.ucharPtr(i, j)[2];
                         }
-                        //let src = cv.imread("canvas");
+                        else {
+                            dstC3.ucharPtr(i, j)[0] = 0;
+                            dstC3.ucharPtr(i, j)[1] = 0;
+                            dstC3.ucharPtr(i, j)[2] = 0;
+                        }
                     }
                 }
+
+                cv.imshow('canvasOutput', dstC3);
+                src.delete();
+                gray.delete();
+                dst.delete();
+                mask.delete();
+                dstC3.delete();
+                
+
+                // 手法2:template matchingで座標取得
+                let src = cv.imread('canvasInput');
+                let templ = cv.imread('template1');
+                let dst = new cv.Mat();
+                let mask = new cv.Mat();
+                cv.matchTemplate(src, templ, dst, cv.TM_CCORR_NORMED, mask);
+                let result = cv.minMaxLoc(dst, mask);
+                console.log("template1");
+                console.log(result);
+                //console.log(Object.keys(result));
+                if (result.minVal > 0.87) {
+                    let maxPoint = result.maxLoc;
+                    let color = new cv.Scalar(255, 0, 0, 255);
+                    let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
+                    cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
+                }
+
+                templ = cv.imread('template2');
+                dst = new cv.Mat();
+                mask = new cv.Mat();
+                cv.matchTemplate(src, templ, dst, cv.TM_CCORR_NORMED, mask);
+                result = cv.minMaxLoc(dst, mask);
+                console.log("template2");
+                console.log(result);
+                if (result.minVal > 0.785) {
+                    let maxPoint = result.maxLoc;
+                    let color = new cv.Scalar(0, 255, 0, 255);
+                    let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
+                    cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
+                }
+
+                templ = cv.imread('template3');
+                dst = new cv.Mat();
+                mask = new cv.Mat();
+                cv.matchTemplate(src, templ, dst, cv.TM_CCORR_NORMED, mask);
+                result = cv.minMaxLoc(dst, mask);
+                console.log("template3");
+                console.log(result);
+                if (result.minVal > 0.84) {
+                    let maxPoint = result.maxLoc;
+                    let color = new cv.Scalar(0, 0, 255, 255);
+                    let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
+                    cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
+                }
+
+                cv.imshow('canvasOutput', src);
+                src.delete(); dst.delete(); mask.delete();
+
+
+            }
+            //let src = cv.imread("canvas");
+        }
+    }
 */
-                
-                                // JSON形式でファイル格納、出力(?)
-                                var masterData = [];
-                
-                                var data1 = {
-                                    markerID: 'hiro',
-                                    markerPos: {
-                                        x: pos1.x,
-                                        y: pos1.y,
-                                        z: pos1.z
-                                    }
-                                    , markerRot: {
-                                        x: rot1.x,
-                                        y: rot1.y,
-                                        z: rot1.z
-                                    }
-                                };
-                
-                                var data2 = {
-                                    markerID: 'barcode0',
-                                    markerPos: {
-                                        x: pos2.x,
-                                        y: pos2.y,
-                                        z: pos2.z
-                                    }
-                                    , markerRot: {
-                                        x: rot2.x,
-                                        y: rot2.y,
-                                        z: rot2.z
-                                    }
-                                };
-                
-                                var data3 = {
-                                    markerID: 'barcode1',
-                                    markerPos: {
-                                        x: pos3.x,
-                                        y: pos3.y,
-                                        z: pos3.z
-                                    }
-                                    , markerRot: {
-                                        x: rot3.x,
-                                        y: rot3.y,
-                                        z: rot3.z
-                                    }
-                                };
-                
-                                masterData.push(data1);
-                                masterData.push(data2);
-                                masterData.push(data3);
-                
-                                let masterData2 = JSON.stringify({ MarkerInfo: masterData }, null, ' ');
-                                console.log(masterData2);
-                
+
+                // JSON形式でファイル格納、出力(?)
+                var masterData = [];
+
+                var data1 = {
+                    markerID: 'hiro',
+                    markerPos: {
+                        x: pos1.x,
+                        y: pos1.y,
+                        z: pos1.z
+                    }
+                    , markerRot: {
+                        x: rot1.x,
+                        y: rot1.y,
+                        z: rot1.z
+                    }
+                };
+
+                var data2 = {
+                    markerID: 'barcode0',
+                    markerPos: {
+                        x: pos2.x,
+                        y: pos2.y,
+                        z: pos2.z
+                    }
+                    , markerRot: {
+                        x: rot2.x,
+                        y: rot2.y,
+                        z: rot2.z
+                    }
+                };
+
+                var data3 = {
+                    markerID: 'barcode1',
+                    markerPos: {
+                        x: pos3.x,
+                        y: pos3.y,
+                        z: pos3.z
+                    }
+                    , markerRot: {
+                        x: rot3.x,
+                        y: rot3.y,
+                        z: rot3.z
+                    }
+                };
+
+                masterData.push(data1);
+                masterData.push(data2);
+                masterData.push(data3);
+
+                let masterData2 = JSON.stringify({ MarkerInfo: masterData }, null, ' ');
+                console.log(masterData2);
+
+                sendJSONData = masterData2;
+
             }
         });
 
@@ -351,11 +400,11 @@
 </head>
 
 <body>
-
-    <a-scene embedded arjs='trackingMethod: best; sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'
-    vr-mode-ui='enabled: false;'
-    >
-    <!--a-scene vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true;" embedded arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;"-->
+    <p><button id="button" type="button" style="position: relative; left: 50px; top: 0px;" onclick="sendJsonData()">データ更新</button></p>
+    <a-scene embedded
+        arjs='trackingMethod: best; sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'
+        vr-mode-ui='enabled: false;'>
+        <!--a-scene vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true;" embedded arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;"-->
         <!-- handle unknown marker -->
         <!-- <a-marker type='unknown'>
         <a-box depth="1" height="1" width="1" position='0 0.5 0' material='opacity: 0.5; side:double; color:blue;'></a-box>
@@ -371,8 +420,7 @@
         </a-marker>
 
         <a-marker type="pattern" url="data/pattern-bed.patt">
-            <a-box position="0 0.5 0" 
-                   material="color: blue; transparent: true; opacity: 0.50;">
+            <a-box position="0 0.5 0" material="color: blue; transparent: true; opacity: 0.50;">
             </a-box>
         </a-marker>
 
@@ -405,19 +453,13 @@
             smoothTolerance=".01" 
             smoothThreshold="5"
         -->
-        <a-nft nft id="nft_marker"
-            type="nft" 
-            url="nft_bed/bed" 
-            smooth="true" 
-            smoothCount="10" 
-            smoothTolerance=".01" 
-            smoothThreshold="5"
-        >
-        <a-box></a-box>
+        <a-nft nft id="nft_marker" type="nft" url="nft_bed/bed" smooth="true" smoothCount="10" smoothTolerance=".01"
+            smoothThreshold="5">
+            <a-box></a-box>
         </a-nft>
 
-            <!-- add a simple camera -->
-            <a-entity camera></a-entity>
+        <!-- add a simple camera -->
+        <a-entity camera></a-entity>
     </a-scene>
     <!--canvas id="canvasInput" style="display: none;"></canvas>
     <canvas id="canvasOutput"></canvas-->
