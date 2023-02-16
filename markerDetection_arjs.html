@@ -12,10 +12,79 @@
     <script>
 
         let sendJSONData;
+        let csvArray = [];
 
-        //ToDo:CSV読み込み機能追加
-        //ダミーデータ：https://www.notion.so/0986208bde314719b4e4b7f682674a4a
-        //各データの文字列すべてsmallCamelCaseとする
+        // CSV読み込み機能追加
+        // ダミーデータ：https://www.notion.so/0986208bde314719b4e4b7f682674a4a
+        function loadCSVData() {
+            // CSVファイルを取得
+            let csv = new XMLHttpRequest();
+
+            // CSVファイルへのパス
+            csv.open("GET", "./data.csv", false);
+
+            // csvファイル読み込み失敗時のエラー対応
+            try {
+                csv.send(null);
+            } catch (err) {
+                console.log(err);
+            }
+
+            // 配列を定義
+            //let csvArray = [];
+
+            // 改行ごとに配列化
+            let lines = csv.responseText.split(/\r\n|\n/);
+
+            // 1行ごとに処理
+            for (let i = 0; i < lines.length; ++i) {
+                let cells = lines[i].split(",");
+                if (cells.length != 1) {
+                    csvArray.push(cells);
+                }
+            }
+
+            // コンソールにCSVの内容を配列で出力
+            console.log(csvArray);
+
+            // a-scene生成かつ読み込んだQRデータの数だけa-marker生成
+            let a_scene = document.querySelector('#ar_marker_setting');
+            a_scene.innerHTML = "";
+            let a_scene_html = "";
+            
+            a_scene_html += 
+            `
+                <a-scene id="a-scene" embedded
+                    arjs='trackingMethod: best; sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'
+                    vr-mode-ui='enabled: false;'
+                >
+            `;
+
+            for (item of csvArray) {
+                //console.log(item);
+                // 1行目はヘッダーなので処理Skip
+                if (item[0] != "qr") {
+                    a_scene_html += 
+                    `
+                        <a-marker id="${item[1]},${item[2]}" type='barcode' value='${item[0] - 1}'>
+                            <a-text id="barcode${item[0] - 1}_text" scale="4 4 1" position="0 0 0" rotation="-90 0 0" color="blue" value="Detect">
+                            </a-text>
+                        </a-marker>        
+                    `;
+                }
+            }
+            // a-scene最後の記述
+            a_scene_html += 
+            `
+                    <!-- add a simple camera -->
+                    <a-entity camera></a-entity>
+                    <a-entity run></a-entity>
+                </a-scene>
+            `;
+
+            a_scene.innerHTML = a_scene_html;
+
+        }
 
         /*-----------------------------
             JSONデータを送信する
@@ -67,7 +136,7 @@
             }
         }
 
-        AFRAME.registerComponent('marker', {
+        AFRAME.registerComponent('run', {
             //tick: function (delta) {
             tick: function () {
 
@@ -76,55 +145,7 @@
                 // HTML内の<a-scene embedded arjs='sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'>
                 // matrixCodeType: 3x3を適宜修正してbarcode選択
 
-                //const marker = this.el;
-                const marker1 = document.querySelector("#hiro");
-                const marker2 = document.querySelector("#barcode0");
-                const marker3 = document.querySelector("#barcode1");
-
-                // Position：画面中心座標から右と上で+方向、左と下で-方向
-                // Rotation：北向きで+90度、南向きで−90度、時計回りで+90度まで増加、反時計回りで-90度まで減少
-
-                //const pos = marker.getAttribute('position');
-                //console.log("marker pos:", pos.x, pos.y, pos.z);
-                const pos1 = marker1.getAttribute('position');
-                //console.log("marker1 pos:", pos1.x, pos1.y, pos1.z);
-
-                //const rot = marker.getAttribute('rotation');
-                //console.log("marker rot:", rot.x, rot.y, rot.z);
-                const rot1 = marker1.getAttribute('rotation');
-                //console.log("marker1 rot:", rot1.x, rot1.y, rot1.z);
-
-                const scale1 = marker1.getAttribute('scale');
-                //console.log("marker1 scale:", scale1.x, scale1.y, scale1.z);
-
-                // Origin QRの取得座標を原点(0,0)としてItem QRの位置座標を変換する
-                const fix_pos_x = pos1.x;
-                const fix_pos_y = pos1.y;
-
-                const pos2 = marker2.getAttribute('position');
-                //console.log("marker2 pos:", pos2.x, pos2.y, pos2.z);
-                const rot2 = marker2.getAttribute('rotation');
-                //console.log("marker2 rot:", rot2.x, rot2.y, rot2.z);
-                const marker2_text = document.querySelector("#barcode0_text");
-                var text = 'Item QR:' + marker2.id + '\n';
-                text += 'x:' + (pos2.x - fix_pos_x) + '\n';
-                text += 'y:' + (pos2.y - fix_pos_y) + '\n';
-                text += 'rot:' + Math.trunc(rot2.z);
-                marker2_text.setAttribute('value', text);
-                //marker2_text.setAttribute('rotation', '-90 0 ' + String(Math.trunc(rot2.z)));
-                const pos3 = marker3.getAttribute('position');
-                //console.log("marker3 pos:", pos3.x, pos3.y, pos3.z);
-                const rot3 = marker3.getAttribute('rotation');
-                //console.log("marker3 rot:", rot3.x, rot3.y, rot3.z);
-                const marker3_text = document.querySelector("#barcode1_text");
-                text = 'Item QR:' + marker3.id + '\n';
-                text += 'x:' + (pos3.x - fix_pos_x) + '\n';
-                text += 'y:' + (pos3.y - fix_pos_y) + '\n';
-                text += 'rot:' + Math.trunc(rot3.z);
-                marker3_text.setAttribute('value', text);
-                //marker3_text.setAttribute('rotation', '-90 0 ' + String(Math.trunc(rot3.z)));
-
-                // JSON形式でファイル格納、出力(?)
+                // JSON形式でファイル格納、出力
                 var masterData = [];
 
                 let roomID = "testRoom1";
@@ -133,11 +154,10 @@
                 //console.log(markers.length);
 
                 for (var i = 0; i < markers.length; i++) {
-                    //console.log(markers[0]);
-                    //console.log(document.querySelector("#hiro"));
                     //console.log(markers[i].getAttribute('id'));
-
                     //console.log(markers[i].getAttribute('visible'));
+                    // Position：画面中心座標から右と上で+方向、左と下で-方向
+                    // Rotation：北向きで+90度、南向きで−90度、時計回りで+90度まで増加、反時計回りで-90度まで減少
                     if (markers[i].getAttribute('visible') == true) {
 
                         var pos = markers[i].getAttribute('position');
@@ -152,9 +172,18 @@
                         // Origin QRの取得座標を原点(0,0)としてItem QRの位置座標を変換する
                         var pos_x = pos.x - markers[0].getAttribute('position').x;
                         var pos_y = pos.y - markers[0].getAttribute('position').y;
+                        
+                        // ToDo:回転角度の値を修正して出力
+                        let marker_text = document.querySelector("#barcode" + i + "_text");
+                        var text = markers[i].id + '\n';
+                        text += 'x:' + pos_x + '\n';
+                        text += 'y:' + pos_y + '\n';
+                        text += 'rot:' + Math.trunc(rot.z);
+                        marker_text.setAttribute('value', text);
 
                         var data = {
-                            markerID: markers[i].getAttribute('id'),
+                            itemId: markers[i].getAttribute('id').split(",")[0],
+                            itemVariationId: markers[i].getAttribute('id').split(",")[1],
                             markerPos: {
                                 x: pos_x,
                                 y: pos_y,
@@ -169,8 +198,9 @@
                         masterData.push(data);
                     }
                 }
-
-                let masterData2 = JSON.stringify({ room_id: roomID, items: masterData }, null, ' ');
+                
+                // 各データの文字列すべてsmallCamelCaseとする
+                let masterData2 = JSON.stringify({ roomId: roomID, items: masterData }, null, ' ');
                 console.log(masterData2);
 
                 sendJSONData = masterData2;
@@ -181,162 +211,10 @@
     </script>
 </head>
 
-<body>
+<body onload="loadCSVData()">
     <p><button id="button" type="button" style="position: relative; left: 50px; top: 0px;"
             onclick="sendJsonData()">データ更新</button></p>
-    <a-scene embedded
-        arjs='trackingMethod: best; sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'
-        vr-mode-ui='enabled: false;'>
-
-        <!-- handle hiro marker -->
-        <a-marker marker id="hiro" preset='hiro'>
-            <a-box position='0 0.5 0' material='opacity: 0.5; side: double;color:red;'>
-                <a-torus-knot radius='0.26' radius-tubular='0.05'
-                    animation="property: rotation; to:360 0 0; dur: 5000; easing: linear; loop: true">
-                </a-torus-knot>
-            </a-box>
-        </a-marker>
-
-        <!-- handle matrix marker -->
-        <a-marker id="barcode0" type='barcode' value='0'>
-            <a-text id="barcode0_text" scale="4 4 1" position="0 0 0" rotation="-90 0 0" color="blue" value="Detect">
-            </a-text>
-        </a-marker>
-
-        <a-marker id="barcode1" type='barcode' value='1'>
-            <a-text id="barcode1_text" scale="4 4 1" position="0 0 0" rotation="-90 0 0" color="red" value="Detect">
-            </a-text>
-        </a-marker>
-
-        <a-marker id="barcode2" type='barcode' value='2'>
-            <a-box position="0 0.5 0" material="color: blue; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode3" type='barcode' value='3'>
-            <a-box position="0 0.5 0" material="color: blue; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode4" type='barcode' value='4'>
-            <a-box position="0 0.5 0" material="color: blue; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode5" type='barcode' value='5'>
-            <a-box position="0 0.5 0" material="color: blue; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode6" type='barcode' value='6'>
-            <a-box position="0 0.5 0" material="color: blue; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode7" type='barcode' value='7'>
-            <a-box position="0 0.5 0" material="color: green; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode8" type='barcode' value='8'>
-            <a-box position="0 0.5 0" material="color: green; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode9" type='barcode' value='9'>
-            <a-box position="0 0.5 0" material="color: green; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode10" type='barcode' value='10'>
-            <a-box position="0 0.5 0" material="color: green; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode11" type='barcode' value='11'>
-            <a-box position="0 0.5 0" material="color: green; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode12" type='barcode' value='12'>
-            <a-box position="0 0.5 0" material="color: green; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode13" type='barcode' value='13'>
-            <a-box position="0 0.5 0" material="color: green; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode14" type='barcode' value='14'>
-            <a-box position="0 0.5 0" material="color: red; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode15" type='barcode' value='15'>
-            <a-box position="0 0.5 0" material="color: red; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode16" type='barcode' value='16'>
-            <a-box position="0 0.5 0" material="color: red; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode17" type='barcode' value='17'>
-            <a-box position="0 0.5 0" material="color: red; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode18" type='barcode' value='18'>
-            <a-box position="0 0.5 0" material="color: red; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode19" type='barcode' value='19'>
-            <a-box position="0 0.5 0" material="color: red; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode20" type='barcode' value='20'>
-            <a-box position="0 0.5 0" material="color: red; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode21" type='barcode' value='21'>
-            <a-box position="0 0.5 0" material="color: black; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode22" type='barcode' value='22'>
-            <a-box position="0 0.5 0" material="color: black; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode23" type='barcode' value='23'>
-            <a-box position="0 0.5 0" material="color: black; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode24" type='barcode' value='24'>
-            <a-box position="0 0.5 0" material="color: black; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode25" type='barcode' value='25'>
-            <a-box position="0 0.5 0" material="color: black; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <a-marker id="barcode26" type='barcode' value='26'>
-            <a-box position="0 0.5 0" material="color: black; transparent: true; opacity: 0.50;">
-            </a-box>
-        </a-marker>
-
-        <!-- add a simple camera -->
-        <a-entity camera></a-entity>
-    </a-scene>
-
+    <div id="ar_marker_setting"></div>
 </body>
 
 </html>
