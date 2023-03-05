@@ -60,17 +60,29 @@
                 >
             `;
 
+            /* ToDo:OriginQR箇所は一旦ハードコーディングで設定しておく */
+            //・・・
+            a_scene_html += 
+            `
+                <a-marker id="roomId" type='barcode' value='0'>
+                    <a-text id="barcode0_text" scale="4 4 1" position="0 0 0" rotation="-90 0 0" color="red" value="OriginQR">
+                    </a-text>
+                </a-marker>        
+            `;
+
+
             for (item of csvArray) {
                 //console.log(item);
                 // 1行目はヘッダーなので処理Skip
                 if (item[0] != "qr") {
                     a_scene_html += 
                     `
-                        <a-marker id="${item[1]},${item[2]}" type='barcode' value='${item[0] - 1}'>
-                            <a-text id="barcode${item[0] - 1}_text" scale="4 4 1" position="0 0 0" rotation="-90 0 0" color="blue" value="Detect">
+                        <a-marker id="${item[1]},${item[2]}" type='barcode' value='${item[0]}'>
+                            <a-text id="barcode${item[0]}_text" scale="4 4 1" position="0 0 0" rotation="-90 0 0" color="blue" value="">
                             </a-text>
                         </a-marker>        
                     `;
+                    //break;
                 }
             }
             // a-scene最後の記述
@@ -172,31 +184,56 @@
                         // Origin QRの取得座標を原点(0,0)としてItem QRの位置座標を変換する
                         var pos_x = pos.x - markers[0].getAttribute('position').x;
                         var pos_y = pos.y - markers[0].getAttribute('position').y;
+                        var rot_fix = 0;
                         
                         // ToDo:回転角度の値を修正して出力
                         let marker_text = document.querySelector("#barcode" + i + "_text");
                         var text = markers[i].id + '\n';
-                        text += 'x:' + pos_x + '\n';
-                        text += 'y:' + pos_y + '\n';
-                        text += 'rot:' + Math.trunc(rot.z);
+                        text += 'x:' + pos_x.toFixed(2) + '\n';
+                        text += 'y:' + pos_y.toFixed(2) + '\n';
+                        //text += 'rot_z:' + rot.x + '\n';
+                        //text += 'rot_x:' + Math.trunc(rot.x) + '\n';
+                        //text += 'rot_y:' + Math.trunc(rot.y) + '\n';
+                        if(Math.trunc(rot.x) > 0 && Math.trunc(rot.y) < 0){
+                            text += 'rot_y_fix:' + (-1 * Math.trunc(rot.y));
+                            rot_fix = (-1 * Math.trunc(rot.y));
+                        }else if(Math.trunc(rot.x) < 0 && Math.trunc(rot.y) < 0){
+                            text += 'rot_y_fix:' + (180 + Math.trunc(rot.y));
+                            rot_fix = (180 + Math.trunc(rot.y));
+                        }else if(Math.trunc(rot.x) > 0 && Math.trunc(rot.y) > 0){
+                            text += 'rot_y_fix:' + (360 - Math.trunc(rot.y));
+                            rot_fix = (360 - Math.trunc(rot.y));
+                        }else if(Math.trunc(rot.x) < 0 && Math.trunc(rot.y) > 0){
+                            text += 'rot_y_fix:' + (180 + Math.trunc(rot.y));
+                            rot_fix = (180 + Math.trunc(rot.y));
+                        }else if(Math.trunc(rot.x) < 0 && Math.trunc(rot.y) == 0){
+                            text += 'rot_y_fix:' + (180 + Math.trunc(rot.y));
+                            rot_fix = (180 + Math.trunc(rot.y));
+                        }else{
+                            text += 'rot_y_fix:' + Math.trunc(rot.y);
+                            rot_fix = Math.trunc(rot.y);
+                        }
+
+                        //text += 'rot_z:' + Math.trunc(rot.z);
                         marker_text.setAttribute('value', text);
 
                         var data = {
                             itemId: markers[i].getAttribute('id').split(",")[0],
                             itemVariationId: markers[i].getAttribute('id').split(",")[1],
                             markerPos: {
-                                x: pos_x,
-                                y: pos_y,
-                                z: pos.z
+                                x: pos_x.toFixed(2),
+                                y: pos_y.toFixed(2),
+                                //z: pos.z
                             }
                             , markerRot: {
-                                x: rot.x,
-                                y: rot.y,
-                                z: rot.z
+                                //x: rot.x,
+                                y: rot_fix,
+                                //z: rot.z
                             }
                         };
                         masterData.push(data);
                     }
+                    //break; // 動作確認時以外はコメントアウト
                 }
                 
                 // 各データの文字列すべてsmallCamelCaseとする
@@ -212,9 +249,12 @@
 </head>
 
 <body onload="loadCSVData()">
-    <p><button id="button" type="button" style="position: relative; left: 50px; top: 0px;"
-            onclick="sendJsonData()">データ更新</button></p>
     <div id="ar_marker_setting"></div>
+    <p>
+        <button id="button" type="button" style="position: absolute; left: 20px; top: 10px;"
+        onclick="sendJsonData()">データ更新
+        </button>
+    </p>
 </body>
 
 </html>
