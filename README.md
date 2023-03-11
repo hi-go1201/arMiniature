@@ -1,4 +1,8 @@
 # arMiniature
+## 使い方
+- python -m http.server 8000 でローカルサーバ起動
+- python server.py 別プロセスでJSONデータ受取用サーバ起動
+- csvと一致させるqr画像の値はArtoolkit Barcode Markers collectionのファイル名と一致
 ## 参考文献
 1. AR.js examples
     ###### https://stemkoski.github.io/AR.js-examples/index.html
