@@ -51,23 +51,23 @@
             let a_scene = document.querySelector('#ar_marker_setting');
             a_scene.innerHTML = "";
             let a_scene_html = "";
-            
-            a_scene_html += 
-            `
+
+            a_scene_html +=
+                `
                 <a-scene id="a-scene" embedded
-                    arjs='trackingMethod: best; sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'
+                    arjs='trackingMethod: best; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'
                     vr-mode-ui='enabled: false;'
                 >
             `;
 
             /* ToDo:OriginQR箇所は一旦ハードコーディングで設定しておく */
             //・・・
-            a_scene_html += 
-            `
+            a_scene_html +=
+                `
                 <a-marker id="roomId" type='barcode' value='0'>
                     <a-text id="barcode0_text" scale="4 4 1" position="0 0 0" rotation="-90 0 0" color="red" value="OriginQR">
                     </a-text>
-                </a-marker>        
+                </a-marker>
             `;
 
 
@@ -75,8 +75,8 @@
                 //console.log(item);
                 // 1行目はヘッダーなので処理Skip
                 if (item[0] != "qr") {
-                    a_scene_html += 
-                    `
+                    a_scene_html +=
+                        `
                         <a-marker id="${item[1]},${item[2]}" type='barcode' value='${item[0]}'>
                             <a-text id="barcode${item[0]}_text" scale="4 4 1" position="0 0 0" rotation="-90 0 0" color="blue" value="">
                             </a-text>
@@ -86,8 +86,8 @@
                 }
             }
             // a-scene最後の記述
-            a_scene_html += 
-            `
+            a_scene_html +=
+                `
                     <!-- add a simple camera -->
                     <a-entity camera></a-entity>
                     <a-entity run></a-entity>
@@ -133,6 +133,15 @@
 
                 //データを送信
                 xhr = new XMLHttpRequest;       //インスタンス作成
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4) {
+                        if (xhr.status == 200) {
+                            let data = xhr.responseText;
+                            console.log(data);
+                        }
+                    }
+                }
+
                 xhr.onload = function () {        //レスポンスを受け取った時の処理（非同期）
                     var res = xhr.responseText;
                     if (res.length > 0) alert(res);
@@ -140,7 +149,7 @@
                 xhr.onerror = function () {       //エラーが起きた時の処理（非同期）
                     alert("data send error!");
                 }
-                xhr.open('post', "http://localhost:3333/", true);    //(1)
+                xhr.open('post', "http://localhost:3307/", true);    //(1)
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 xhr.send(json_text);    //送信実行
             } else {
@@ -160,7 +169,7 @@
                 // JSON形式でファイル格納、出力
                 var masterData = [];
 
-                let roomID = "testRoom1";
+                let roomID = "room-1";
 
                 var markers = document.getElementsByTagName('a-marker');
                 //console.log(markers.length);
@@ -185,7 +194,7 @@
                         var pos_x = pos.x - markers[0].getAttribute('position').x;
                         var pos_y = pos.y - markers[0].getAttribute('position').y;
                         var rot_fix = 0;
-                        
+
                         // ToDo:回転角度の値を修正して出力
                         let marker_text = document.querySelector("#barcode" + i + "_text");
                         var text = markers[i].id + '\n';
@@ -194,22 +203,22 @@
                         //text += 'rot_z:' + rot.x + '\n';
                         //text += 'rot_x:' + Math.trunc(rot.x) + '\n';
                         //text += 'rot_y:' + Math.trunc(rot.y) + '\n';
-                        if(Math.trunc(rot.x) > 0 && Math.trunc(rot.y) < 0){
+                        if (Math.trunc(rot.x) > 0 && Math.trunc(rot.y) < 0) {
                             text += 'rot_y_fix:' + (-1 * Math.trunc(rot.y));
                             rot_fix = (-1 * Math.trunc(rot.y));
-                        }else if(Math.trunc(rot.x) < 0 && Math.trunc(rot.y) < 0){
+                        } else if (Math.trunc(rot.x) < 0 && Math.trunc(rot.y) < 0) {
                             text += 'rot_y_fix:' + (180 + Math.trunc(rot.y));
                             rot_fix = (180 + Math.trunc(rot.y));
-                        }else if(Math.trunc(rot.x) > 0 && Math.trunc(rot.y) > 0){
+                        } else if (Math.trunc(rot.x) > 0 && Math.trunc(rot.y) > 0) {
                             text += 'rot_y_fix:' + (360 - Math.trunc(rot.y));
                             rot_fix = (360 - Math.trunc(rot.y));
-                        }else if(Math.trunc(rot.x) < 0 && Math.trunc(rot.y) > 0){
+                        } else if (Math.trunc(rot.x) < 0 && Math.trunc(rot.y) > 0) {
                             text += 'rot_y_fix:' + (180 + Math.trunc(rot.y));
                             rot_fix = (180 + Math.trunc(rot.y));
-                        }else if(Math.trunc(rot.x) < 0 && Math.trunc(rot.y) == 0){
+                        } else if (Math.trunc(rot.x) < 0 && Math.trunc(rot.y) == 0) {
                             text += 'rot_y_fix:' + (180 + Math.trunc(rot.y));
                             rot_fix = (180 + Math.trunc(rot.y));
-                        }else{
+                        } else {
                             text += 'rot_y_fix:' + Math.trunc(rot.y);
                             rot_fix = Math.trunc(rot.y);
                         }
@@ -220,22 +229,18 @@
                         var data = {
                             itemId: markers[i].getAttribute('id').split(",")[0],
                             itemVariationId: markers[i].getAttribute('id').split(",")[1],
-                            markerPos: {
+                            position: {
                                 x: pos_x.toFixed(2),
                                 y: pos_y.toFixed(2),
                                 //z: pos.z
                             }
-                            , markerRot: {
-                                //x: rot.x,
-                                y: rot_fix,
-                                //z: rot.z
-                            }
+                            , rotation: rot_fix,
                         };
-                        masterData.push(data);
+                        if (i != 0) masterData.push(data);
                     }
                     //break; // 動作確認時以外はコメントアウト
                 }
-                
+
                 // 各データの文字列すべてsmallCamelCaseとする
                 let masterData2 = JSON.stringify({ roomId: roomID, items: masterData }, null, ' ');
                 console.log(masterData2);
@@ -252,7 +257,7 @@
     <div id="ar_marker_setting"></div>
     <p>
         <button id="button" type="button" style="position: absolute; left: 20px; top: 10px;"
-        onclick="sendJsonData()">データ更新
+            onclick="sendJsonData()">データ更新
         </button>
     </p>
 </body>
