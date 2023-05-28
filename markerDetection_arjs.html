@@ -157,6 +157,11 @@
             }
         }
 
+        function changeCameraMode(){
+            var a_scene = document.getElementsByTagName('a-scene embedded arjs');
+            console.log(a_scene);
+        }
+
         AFRAME.registerComponent('run', {
             //tick: function (delta) {
             tick: function () {
@@ -258,6 +263,12 @@
     <p>
         <button id="button" type="button" style="position: absolute; left: 20px; top: 10px;"
             onclick="sendJsonData()">データ更新
+        </button>
+        <button id="button" type="button" style="position: absolute; left: 140px; top: 10px;"
+            onclick="changeCameraMode()">カメラ切り替え
+        </button>
+        <button id="button" type="button" style="position: absolute; left: 260px; top: 10px;"
+            onclick="sendJsonData()">カメラ画像左右反転
         </button>
     </p>
 </body>
